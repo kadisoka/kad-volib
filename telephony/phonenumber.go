@@ -1,7 +1,6 @@
 package telephony
 
 import (
-	"strconv"
 	"strings"
 
 	"github.com/alloyzeus/go-azfl/v2/azcore"
@@ -9,6 +8,10 @@ import (
 )
 
 // PhoneNumber represents a phone number as we need.
+//
+// Note that phonenumber is pretty complex. We can see it
+// in "github.com/nyaruka/phonenumbers".PhoneNumber. We will
+// add more details as needed.
 type PhoneNumber struct {
 	countryCode    int32
 	nationalNumber int64
@@ -20,7 +23,20 @@ var _ azcore.ValueObject = PhoneNumber{}
 var _ azcore.ValueObjectAssert[PhoneNumber] = PhoneNumber{}
 
 func NewPhoneNumber(countryCode int32, nationalNumber int64) PhoneNumber {
-	return PhoneNumber{countryCode: countryCode, nationalNumber: nationalNumber}
+	if nationalNumber < 0 {
+		panic("national number must be positive number")
+	}
+	nn := uint64(nationalNumber)
+	parsed := &phonenumbers.PhoneNumber{
+		CountryCode:    &countryCode,
+		NationalNumber: &nn,
+	}
+	return PhoneNumber{
+		countryCode:    *parsed.CountryCode,
+		nationalNumber: int64(*parsed.NationalNumber),
+		rawInput:       "",
+		isValid:        phonenumbers.IsValidNumber(parsed),
+	}
 }
 
 func PhoneNumberFromString(input string) (PhoneNumber, error) {
@@ -30,16 +46,16 @@ func PhoneNumberFromString(input string) (PhoneNumber, error) {
 		input = "+" + parts[2]
 	}
 
-	parsedPhoneNumber, err := phonenumbers.Parse(input, "")
+	parsed, err := phonenumbers.Parse(input, "")
 	if err != nil {
 		return PhoneNumber{}, err
 	}
 
 	pn := PhoneNumber{
-		countryCode:    *parsedPhoneNumber.CountryCode,
-		nationalNumber: int64(*parsedPhoneNumber.NationalNumber),
+		countryCode:    *parsed.CountryCode,
+		nationalNumber: int64(*parsed.NationalNumber),
 		rawInput:       input,
-		isValid:        phonenumbers.IsValidNumber(parsedPhoneNumber),
+		isValid:        phonenumbers.IsValidNumber(parsed),
 	}
 
 	return pn, nil
@@ -55,19 +71,41 @@ func (pn PhoneNumber) Equal(other interface{}) bool {
 
 func (pn PhoneNumber) Equals(other interface{}) bool {
 	if o, ok := other.(PhoneNumber); ok {
-		return o.countryCode == pn.countryCode &&
-			o.nationalNumber == pn.nationalNumber
+		return pn.EqualsPhoneNumber(o)
 	}
 	if o, _ := other.(*PhoneNumber); o != nil {
-		return o.countryCode == pn.countryCode &&
-			o.nationalNumber == pn.nationalNumber
+		return pn.EqualsPhoneNumber(*o)
 	}
 	return false
 }
+func (pn PhoneNumber) EqualsPhoneNumber(other PhoneNumber) bool {
+	return other.countryCode == pn.countryCode &&
+		other.nationalNumber == pn.nationalNumber
+}
 
-func (pn PhoneNumber) CountryCode() int32    { return pn.countryCode }
+func (pn PhoneNumber) CountryCode() int32 { return pn.countryCode }
+func (pn PhoneNumber) WithCountryCode(countryCode int32) PhoneNumber {
+	out := &PhoneNumber{
+		countryCode:    countryCode,
+		nationalNumber: pn.nationalNumber,
+		rawInput:       "", // Clear because it's now not representative
+	}
+	out.revalidate()
+	return *out
+}
+
 func (pn PhoneNumber) NationalNumber() int64 { return pn.nationalNumber }
-func (pn PhoneNumber) RawInput() string      { return pn.rawInput }
+func (pn PhoneNumber) WithNationalNumber(nationalNumber int64) PhoneNumber {
+	out := &PhoneNumber{
+		countryCode:    pn.countryCode,
+		nationalNumber: nationalNumber,
+		rawInput:       "", // Clear because it's now not representative
+	}
+	out.revalidate()
+	return *out
+}
+
+func (pn PhoneNumber) RawInput() string { return pn.rawInput }
 
 // RawOrFormatted returns a string which prefers raw input with formatted
 // string as the default.
@@ -78,12 +116,25 @@ func (pn PhoneNumber) RawOrFormatted() string {
 	return pn.String()
 }
 
-// TODO: get E.164 string
 // TODO: consult the standards
 func (pn PhoneNumber) String() string {
-	if pn.countryCode == 0 && pn.nationalNumber == 0 {
-		return "+"
+	nn := uint64(pn.nationalNumber)
+	parsed := &phonenumbers.PhoneNumber{
+		CountryCode:    &pn.countryCode,
+		NationalNumber: &nn,
 	}
-	return "+" + strconv.FormatInt(int64(pn.countryCode), 10) +
-		strconv.FormatInt(pn.nationalNumber, 10)
+	return phonenumbers.Format(parsed, phonenumbers.E164)
+}
+
+func (pn *PhoneNumber) revalidate() bool {
+	if pn.nationalNumber < 0 {
+		panic("national number must be positive number")
+	}
+	nn := uint64(pn.nationalNumber)
+	parsed := &phonenumbers.PhoneNumber{
+		CountryCode:    &pn.countryCode,
+		NationalNumber: &nn,
+	}
+	pn.isValid = phonenumbers.IsValidNumber(parsed)
+	return pn.isValid
 }
