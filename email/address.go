@@ -8,6 +8,15 @@ import (
 	"github.com/alloyzeus/go-azfl/v2/errors"
 )
 
+// TODO:
+// - This package should provide a set of Normalization and Validation
+//   profiles
+//   - e.g., some some use cases might require high interoperability, e.g.
+//     they accept @ or " character in local-part. While some others are
+//     based on common practices.
+// - Users of this package could also define their own Normalization and
+//   Validation profiles
+
 type Address struct {
 	localPart  string
 	domainPart string
@@ -17,28 +26,27 @@ type Address struct {
 var _ azcore.ValueObject = Address{}
 var _ azcore.ValueObjectAssert[Address] = Address{}
 
+func AddressFromLocalAndDomainParts(localPart, domainPart string) (Address, error) {
+	return Address{
+		localPart:  localPart,
+		domainPart: domainPart,
+	}, nil
+}
+
 func AddressFromString(input string) (Address, error) {
-	parts := strings.SplitN(input, "@", 2) //TODO: from the back
-	if len(parts) < 2 {
-		return Address{}, errors.ArgMsg("input", "malformed")
+	localPart, domainPart, _, err := normalizeAddressString(input)
+	if err != nil {
+		return Address{}, err
 	}
-	//TODO(exa): normalize localPart and domainPart
-	if parts[0] == "" {
-		return Address{}, errors.ArgMsg("input", "local part empty")
-	}
-	if parts[1] == "" || !addressDomainRE.MatchString(parts[1]) {
-		return Address{}, errors.ArgMsg("input", "domain part malformed")
-	}
-	//TODO(exa): perform more extensive checking
 
 	return Address{
-		localPart:  parts[0],
-		domainPart: strings.ToLower(parts[1]),
+		localPart:  localPart,
+		domainPart: domainPart,
 		rawInput:   input,
 	}, nil
 }
 
-// TODO: at least we check for common address convention
+// TODO: at least we check for common address convention. Also, by profile.
 func (addr Address) IsStaticallyValid() bool {
 	return addr.localPart != "" && addr.domainPart != ""
 }
@@ -95,4 +103,38 @@ var addressDomainRE = regexp.MustCompile("^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA
 
 func IsValidAddress(str string) bool {
 	return addressRE.MatchString(str)
+}
+
+func normalizeAddressString(input string) (localPart, domainPart, normalized string, err error) {
+	input = strings.TrimSpace(input)
+	if input == "" {
+		return "", "", "", errors.ArgMsg("input", "empty")
+	}
+
+	lastAt := strings.LastIndex(input, "@")
+	if lastAt == -1 {
+		return "", "", "", errors.ArgMsg("input", "malformed")
+	}
+
+	localPart = input[:lastAt]
+	domainPart = input[lastAt+1:]
+
+	if localPart == "" {
+		return "", "", "", errors.ArgMsg("input", "local part empty")
+	}
+	if domainPart == "" || !addressDomainRE.MatchString(domainPart) {
+		return "", "", "", errors.ArgMsg("input", "domain part malformed")
+	}
+
+	// TODO(exa): domain normalization
+	// - expect punycode (use IDNA)
+	// - normalize, e.g., lowercase ASCII characters
+	domainPart = strings.ToLower(domainPart)
+
+	// TODO(exa): local part normalization
+	// - domain-specific?
+	// - for now, let's lowercase everything
+	localPart = strings.ToLower(localPart)
+
+	return localPart, domainPart, localPart + "@" + domainPart, nil
 }

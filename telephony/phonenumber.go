@@ -1,9 +1,8 @@
 package telephony
 
 import (
-	"strings"
-
 	"github.com/alloyzeus/go-azfl/v2/azcore"
+	"github.com/alloyzeus/go-azfl/v2/errors"
 	"github.com/nyaruka/phonenumbers"
 )
 
@@ -22,29 +21,34 @@ type PhoneNumber struct {
 var _ azcore.ValueObject = PhoneNumber{}
 var _ azcore.ValueObjectAssert[PhoneNumber] = PhoneNumber{}
 
-func NewPhoneNumber(countryCode int32, nationalNumber int64) PhoneNumber {
+func PhoneNumberFromCountryCodeAndNationalNumber(
+	countryCode int32,
+	nationalNumber int64,
+) (PhoneNumber, error) {
 	if nationalNumber < 0 {
-		panic("national number must be positive number")
+		return PhoneNumber{}, errors.ArgMsg("nationalNumber", "must be a positive number")
 	}
+
 	nn := uint64(nationalNumber)
 	parsed := &phonenumbers.PhoneNumber{
 		CountryCode:    &countryCode,
 		NationalNumber: &nn,
 	}
+
 	return PhoneNumber{
 		countryCode:    *parsed.CountryCode,
 		nationalNumber: int64(*parsed.NationalNumber),
 		rawInput:       "",
 		isValid:        phonenumbers.IsValidNumber(parsed),
-	}
+	}, nil
 }
 
 func PhoneNumberFromString(input string) (PhoneNumber, error) {
-	// Check if the country code is doubled
-	if parts := strings.Split(input, "+"); len(parts) == 3 {
-		// We assume that the first part was automatically added at the client
-		input = "+" + parts[2]
-	}
+	// // Check if the country code is doubled
+	// if parts := strings.Split(input, "+"); len(parts) == 3 {
+	// 	// We assume that the first part was automatically added at the client
+	// 	input = "+" + parts[2]
+	// }
 
 	parsed, err := phonenumbers.Parse(input, "")
 	if err != nil {
