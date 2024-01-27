@@ -3,8 +3,8 @@ module github.com/kadisoka/kad-volib
 go 1.21
 
 require (
-	github.com/alloyzeus/go-azfl v0.0.0-20231220071816-9740126a2d07
-	github.com/nyaruka/phonenumbers v1.3.0
+	github.com/alloyzeus/go-azfl/v2 v2.0.0-20231226052010-801ca2a4c710
+	github.com/nyaruka/phonenumbers v1.3.1
 )
 
 require (

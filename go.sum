@@ -1,11 +1,11 @@
-github.com/alloyzeus/go-azfl v0.0.0-20231220071816-9740126a2d07 h1:6iULNU8NCy5rRi9wKdjSYyMVKWD3kmP7kYMJW3fYyu4=
-github.com/alloyzeus/go-azfl v0.0.0-20231220071816-9740126a2d07/go.mod h1:Xi1SJoY0VACX/IThW87UueCKe2OzTYrPt8YFV430sos=
+github.com/alloyzeus/go-azfl/v2 v2.0.0-20231226052010-801ca2a4c710 h1:C6tOkFvUo8ZM4Mj/F/HT/1NLewry24ZQf/RC32xVoPs=
+github.com/alloyzeus/go-azfl/v2 v2.0.0-20231226052010-801ca2a4c710/go.mod h1:IbzAEabR09S4C3ic9nnu3NeJoJmPkinkxvaD1n6Kpt8=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/google/go-cmp v0.5.5 h1:Khx7svrCpmxxtHBq5j2mp/xVjsi8hQMfNLvJFAlrGgU=
 github.com/google/go-cmp v0.5.5/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
-github.com/nyaruka/phonenumbers v1.3.0 h1:IFyyJfF2Elg8xGKFghWrRXzb6qAHk+Q3uPqmIgS20JQ=
-github.com/nyaruka/phonenumbers v1.3.0/go.mod h1:4jyKp/BFUokLbCHyoZag+T3S1KezFVoEKtgnbpzItC4=
+github.com/nyaruka/phonenumbers v1.3.1 h1:QcPRnL8hhZeSS6mB0p/Rlv7ma5ASmcgF33YLY0g0A8k=
+github.com/nyaruka/phonenumbers v1.3.1/go.mod h1:4jyKp/BFUokLbCHyoZag+T3S1KezFVoEKtgnbpzItC4=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/rez-go/crock32 v0.0.0-20210224111353-8fde4331511d h1:l2qiHnQPq6c9jf4hQpkANdu1nACdq0MRjuR27cc4XNM=
